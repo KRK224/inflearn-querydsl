@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: create # test 용도
+      ddl-auto: create-drop # test 용도
     properties:
       hibernate:
         #show_sql: true #System.out.println으로 쿼리 확인
