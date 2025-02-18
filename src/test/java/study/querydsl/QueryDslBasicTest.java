@@ -68,6 +68,32 @@ public class QueryDslBasicTest {
 
         //then
         assertThat(member1.getUsername()).isEqualTo("member1");
+    }
 
+    @Test
+    public void searchAndParam() throws Exception{
+        //given & when
+        // 이런 식으로 and 연산자를 쉼표로 대체할 수 있다.
+        // null도 허용하기 때문에 동적 쿼리를 만들 때 유용하다.
+        Member member1 = queryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10),
+                        null // 동적 쿼리
+                ).fetchOne();
+        //then
+        assertThat(member1.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void search() throws Exception{
+        //given & when
+        Member member1 = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1").and(member.age.eq(10)))
+                .fetchOne();
+        //then
+        assertThat(member1.getUsername()).isEqualTo("member1");
     }
 }
