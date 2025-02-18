@@ -9,13 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.entity.Hello;
 import study.querydsl.entity.QHello;
 
 @SpringBootTest
 @Transactional
-@Commit
+@Rollback(value = false)
 class QuerydslApplicationTests {
 
 	@Autowired
@@ -27,7 +28,8 @@ class QuerydslApplicationTests {
 		em.persist(hello);
 
 		JPAQueryFactory query = new JPAQueryFactory(em);
-		QHello qHello = new QHello("h");
+//		QHello qHello = new QHello("h");  // h는 alias
+		QHello qHello = QHello.hello; // 이미 존재하는 걸 사용할 수도 있다.
 
 		Hello result = query
 				.selectFrom(qHello)
