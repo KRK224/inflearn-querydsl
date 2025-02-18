@@ -1,6 +1,7 @@
 package study.querydsl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static study.querydsl.entity.QMember.member;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -54,15 +55,19 @@ public class QueryDslBasicTest {
 
     @Test
     public void startQueryDsl() throws Exception{
+        // 직접 QMember 인스턴스를 생성해서 사용.
+        // 이 경우는 같은 테이블을 join할 때, alias를 다르게 하기 위해 사용하는데... 거의 없다.
+//        QMember m = new QMember("m");
 
-        QMember m = new QMember("m");
         //when
-        Member member1 = queryFactory.select(m)
-                .from(m)
-                .where(m.username.eq("member1")) // 파라미터 바인딩 처리
+        Member member1 = queryFactory
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1")) // 파라미터 바인딩 처리
                 .fetchOne();
 
         //then
         assertThat(member1.getUsername()).isEqualTo("member1");
+
     }
 }
