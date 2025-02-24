@@ -3,8 +3,10 @@ package study.querydsl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static study.querydsl.entity.QMember.member;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +72,18 @@ public class QueryDslBasicTest {
         assertThat(member1.getUsername()).isEqualTo("member1");
     }
 
+
+    @Test
+    public void search() throws Exception{
+        //given & when
+        Member member1 = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1").and(member.age.eq(10)))
+                .fetchOne();
+        //then
+        assertThat(member1.getUsername()).isEqualTo("member1");
+    }
+
     @Test
     public void searchAndParam() throws Exception{
         //given & when
@@ -87,13 +101,92 @@ public class QueryDslBasicTest {
     }
 
     @Test
-    public void search() throws Exception{
-        //given & when
-        Member member1 = queryFactory
+    public void resultFetch() {
+        List<Member> fetch = queryFactory
                 .selectFrom(member)
-                .where(member.username.eq("member1").and(member.age.eq(10)))
-                .fetchOne();
+                .fetch();
+
+        // NonUniqueResultException
+//        Member fetchOne = queryFactory
+//                .selectFrom(member)
+//                .fetchOne();
+
+        Member fetchFirst = queryFactory
+                .selectFrom(member)
+                .fetchFirst();
+
+        QueryResults<Member> results = queryFactory
+                .selectFrom(member)
+                .fetchResults();
+
+        // 쿼리가 2번 나간다. deprecated
+        long totalCount = results.getTotal();
+        List<Member> members = results.getResults();
+
+        // deprecated
+        long total = queryFactory
+                .selectFrom(member)
+                .fetchCount();
+    }
+
+    /**
+     * 1. 회원 나이 내림차순 (desc)
+     * 2. 회원 이름 올림차순 (asc)
+     * 단 2에서 회원 이름이 없으면 마지막에 출력 (nulls last)
+     * @throws Exception
+     */
+    @Test
+    public void sort() throws Exception{
+        //given
+        em.persist(new Member(null, 100));
+        em.persist(new Member("member5", 100));
+        em.persist(new Member("member6", 100));
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .where(member.age.eq(100))
+                .orderBy(member.age.desc(), member.username.asc().nullsLast())
+                .fetch();
+        //when
+        Member member5 = fetch.get(0);
+        Member member6 = fetch.get(1);
+        Member memberNull = fetch.get(2);
+        assertThat(member5.getUsername()).isEqualTo("member5");
+        assertThat(member6.getUsername()).isEqualTo("member6");
+        assertThat(memberNull.getUsername()).isNull();
+
         //then
-        assertThat(member1.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void paging1() throws Exception{
+        //given & when
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1)
+                .limit(2)
+                .fetch();
+
+        //then
+        assertThat(fetch.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void paging2() throws Exception{
+        //given & when
+        QueryResults<Member> fetchResults = queryFactory
+                .selectFrom(member)
+                .orderBy(member.username.desc())
+                .offset(1)
+                .limit(2)
+                .fetchResults();
+
+        //then
+        assertThat(fetchResults.getTotal()).isEqualTo(4);
+        assertThat(fetchResults.getLimit()).isEqualTo(2);
+        assertThat(fetchResults.getOffset()).isEqualTo(1);
+        assertThat(fetchResults.getResults().size()).isEqualTo(2);
+
     }
 }
